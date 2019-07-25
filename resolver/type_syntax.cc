@@ -601,47 +601,57 @@ TypeSyntax::ResultType TypeSyntax::getResultTypeAndBind(core::MutableContext ctx
                 auto symOwner = symData->owner.data(ctx);
 
                 bool isTypeTemplate = symOwner->isSingletonClass(ctx);
-                bool ctxIsSingleton = ctxOwnerData->isSingletonClass(ctx);
 
-                // Check if we're processing a type within the class that
-                // defines this type member by comparing the singleton class of
-                // the context, and the singleton class of the type member's
-                // owner.
-                core::SymbolRef symOwnerSingleton =
-                    isTypeTemplate ? symData->owner : symOwner->lookupSingletonClass(ctx);
-                core::SymbolRef ctxSingleton = ctxIsSingleton ? ctx.owner : ctxOwnerData->lookupSingletonClass(ctx);
-                bool usedOnSourceClass = symOwnerSingleton == ctxSingleton;
+                if (args.allowTypeMember) {
+                    bool ctxIsSingleton = ctxOwnerData->isSingletonClass(ctx);
 
-                // For this to be a valid use of a member or template type, this
-                // must:
-                //
-                // 1. be used in the context of the class that defines it
-                // 2. if it's a type_template type, be used in a singleton
-                //    method
-                // 3. if it's a type_member type, be used in an instance method
-                if (usedOnSourceClass && ((isTypeTemplate && ctxIsSingleton) || !(isTypeTemplate || ctxIsSingleton))) {
-                    if (auto *lambdaParam = core::cast_type<core::LambdaParam>(symData->resultType.get())) {
-                        result.type = core::make_type<core::LambdaParam>(sym, lambdaParam->lower, lambdaParam->upper);
+                    // Check if we're processing a type within the class that
+                    // defines this type member by comparing the singleton class of
+                    // the context, and the singleton class of the type member's
+                    // owner.
+                    core::SymbolRef symOwnerSingleton =
+                        isTypeTemplate ? symData->owner : symOwner->lookupSingletonClass(ctx);
+                    core::SymbolRef ctxSingleton = ctxIsSingleton ? ctx.owner : ctxOwnerData->lookupSingletonClass(ctx);
+                    bool usedOnSourceClass = symOwnerSingleton == ctxSingleton;
+
+                    // For this to be a valid use of a member or template type, this
+                    // must:
+                    //
+                    // 1. be used in the context of the class that defines it
+                    // 2. if it's a type_template type, be used in a singleton
+                    //    method
+                    // 3. if it's a type_member type, be used in an instance method
+                    if (usedOnSourceClass && ((isTypeTemplate && ctxIsSingleton) || !(isTypeTemplate || ctxIsSingleton))) {
+                        if (auto *lambdaParam = core::cast_type<core::LambdaParam>(symData->resultType.get())) {
+                            result.type = core::make_type<core::LambdaParam>(sym, lambdaParam->lower, lambdaParam->upper);
+                        } else {
+                            result.type =
+                                core::make_type<core::LambdaParam>(sym, core::Types::bottom(), core::Types::top());
+                        }
                     } else {
-                        result.type =
-                            core::make_type<core::LambdaParam>(sym, core::Types::bottom(), core::Types::top());
+                        if (auto e = ctx.state.beginError(i->loc, core::errors::Resolver::InvalidTypeDeclarationTyped)) {
+                            string typeSource = isTypeTemplate ? "type_template" : "type_member";
+                            string typeStr = sym.show(ctx);
+
+                            if (usedOnSourceClass) {
+                                if (ctxIsSingleton) {
+                                    e.setHeader("`{}` type `{}` used in a singleton method definition", typeSource,
+                                                typeStr);
+                                } else {
+                                    e.setHeader("`{}` type `{}` used in an instance method definition", typeSource,
+                                                typeStr);
+                                }
+                            } else {
+                                e.setHeader("`{}` type `{}` used outside of the class definition", typeSource, typeStr);
+                            }
+                        }
+                        result.type = core::Types::untypedUntracked();
                     }
                 } else {
-                    if (auto e = ctx.state.beginError(i->loc, core::errors::Resolver::InvalidTypeDeclarationTyped)) {
-                        string typeSource = isTypeTemplate ? "type_template" : "type_member";
-                        string typeStr = sym.show(ctx);
-
-                        if (usedOnSourceClass) {
-                            if (ctxIsSingleton) {
-                                e.setHeader("`{}` type `{}` used in a singleton method definition", typeSource,
-                                            typeStr);
-                            } else {
-                                e.setHeader("`{}` type `{}` used in an instance method definition", typeSource,
-                                            typeStr);
-                            }
-                        } else {
-                            e.setHeader("`{}` type `{}` used outside of the class definition", typeSource, typeStr);
-                        }
+                    // a type member has occurred in a context that doesn't allow them
+                    if (auto e = ctx.state.beginError(i->loc, core::errors::Resolver::InvalidTypeDeclaration)) {
+                        auto flavor = isTypeTemplate ? "type_template"sv : "type_member"sv;
+                        e.setHeader("`{}` `{}` is not allowed in this context", flavor, sym.show(ctx));
                     }
                     result.type = core::Types::untypedUntracked();
                 }

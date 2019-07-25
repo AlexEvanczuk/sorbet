@@ -50,18 +50,23 @@ struct ParsedSig {
 struct TypeSyntaxArgs {
     bool allowSelfType = false;
     bool allowRebind = false;
+    bool allowTypeMember = false;
     core::SymbolRef untypedBlame;
 
     TypeSyntaxArgs withoutRebind() const {
-        return TypeSyntaxArgs{allowSelfType, false, untypedBlame};
+        return TypeSyntaxArgs{allowSelfType, false, allowTypeMember, untypedBlame};
     }
 
     TypeSyntaxArgs withRebind() const {
-        return TypeSyntaxArgs{allowSelfType, true, untypedBlame};
+        return TypeSyntaxArgs{allowSelfType, true, allowTypeMember, untypedBlame};
     }
 
     TypeSyntaxArgs withoutSelfType() const {
-        return TypeSyntaxArgs{false, allowRebind, untypedBlame};
+        return TypeSyntaxArgs{false, allowRebind, allowTypeMember, untypedBlame};
+    }
+
+    TypeSyntaxArgs withoutTypeMember() const {
+        return TypeSyntaxArgs{allowSelfType, allowRebind, false, untypedBlame};
     }
 };
 

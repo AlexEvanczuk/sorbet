@@ -322,8 +322,9 @@ private:
         if (isFullyResolved(ctx, job.rhs)) {
             auto allowSelfType = true;
             auto allowRebind = false;
+            auto allowTypeMember = true;
             job.lhs.data(ctx)->resultType = TypeSyntax::getResultType(
-                ctx, *(job.rhs), ParsedSig{}, TypeSyntaxArgs{allowSelfType, allowRebind, job.lhs});
+                ctx, *(job.rhs), ParsedSig{}, TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, job.lhs});
             return true;
         }
 
@@ -1021,8 +1022,9 @@ private:
             for (auto sig : lastSigs) {
                 auto allowSelfType = true;
                 auto allowRebind = false;
+                auto allowTypeMember = true;
                 TypeSyntax::parseSig(ctx, sig, nullptr,
-                                     TypeSyntaxArgs{allowSelfType, allowRebind, core::Symbols::untyped()});
+                                     TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, core::Symbols::untyped()});
             }
 
             if (auto e = ctx.state.beginError(lastSigs[0]->loc, core::errors::Resolver::InvalidMethodSignature)) {
@@ -1145,9 +1147,10 @@ private:
                     while (i < lastSigs.size()) {
                         auto allowSelfType = true;
                         auto allowRebind = false;
+                        auto allowTypeMember = true;
                         auto sig =
                             TypeSyntax::parseSig(ctx.withOwner(sigOwner), ast::cast_tree<ast::Send>(lastSigs[i]),
-                                                 nullptr, TypeSyntaxArgs{allowSelfType, allowRebind, mdef->symbol});
+                                                 nullptr, TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, mdef->symbol});
                         core::SymbolRef overloadSym;
                         if (isOverloaded) {
                             vector<int> argsToKeep;
@@ -1382,8 +1385,9 @@ public:
                         ParsedSig emptySig;
                         auto allowSelfType = true;
                         auto allowRebind = false;
+                        auto allowTypeMember = false;
                         core::TypePtr resTy = TypeSyntax::getResultType(ctx, *(hash->values[i]), emptySig,
-                                                                     TypeSyntaxArgs{allowSelfType, allowRebind, sym});
+                                                                     TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, sym});
 
                         switch (lit->asSymbol(ctx)._id) {
                             case core::Names::fixed()._id:
@@ -1477,9 +1481,10 @@ public:
                     ParsedSig emptySig;
                     auto allowSelfType = true;
                     auto allowRebind = false;
+                    auto allowTypeMember = true;
                     auto type = TypeSyntax::getResultType(
                         ctx.withOwner(ownerClass), *(send->args[1]), emptySig,
-                        TypeSyntaxArgs{allowSelfType, allowRebind, core::Symbols::noSymbol()});
+                        TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, core::Symbols::noSymbol()});
                     return ast::MK::InsSeq1(send->loc, ast::MK::KeepForTypechecking(std::move(send->args[1])),
                                             make_unique<ast::Cast>(send->loc, type, std::move(expr), send->fun));
                 }
