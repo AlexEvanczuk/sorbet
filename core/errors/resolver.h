@@ -51,9 +51,10 @@ constexpr ErrorClass InvalidTypeAlias{5043, StrictLevel::False};
 constexpr ErrorClass InvalidVariance{5044, StrictLevel::True};
 constexpr ErrorClass GenericClassWithoutTypeArgs{5045, StrictLevel::False};
 constexpr ErrorClass GenericClassWithoutTypeArgsStdlib{5046, StrictLevel::Strict};
-constexpr ErrorClass FinalAncestor{5047, StrictLevel::False};
-constexpr ErrorClass FinalModuleNonFinalMethod{5048, StrictLevel::False};
+constexpr ErrorClass FinalAncestor{5047, StrictLevel::True};
+constexpr ErrorClass FinalModuleNonFinalMethod{5048, StrictLevel::True};
 constexpr ErrorClass BadParameterOrdering{5049, StrictLevel::False};
+constexpr ErrorClass InvalidTypeMemberBounds{5050, StrictLevel::True};
 } // namespace sorbet::core::errors::Resolver
 
 #endif
