@@ -64,9 +64,15 @@ TypePtr Symbol::externalType(const GlobalState &gs) const {
             vector<TypePtr> targs;
             for (auto tm : typeMembers()) {
                 auto tmData = tm.data(gs);
-                auto *lambdaParam = cast_type<LambdaParam>(tmData->resultType.get());
-                ENFORCE(lambdaParam != nullptr);
-                targs.emplace_back(lambdaParam->upperBound);
+                if (tmData->isFixed()) {
+                    auto *lambdaParam = cast_type<LambdaParam>(tmData->resultType.get());
+                    ENFORCE(lambdaParam != nullptr);
+                    targs.emplace_back(lambdaParam->upperBound);
+                } else {
+                    // NOTE: at some point in the future it might make sense to
+                    // instantiate this with the upper bound of the type
+                    targs.emplace_back(Types::untyped(gs, ref));
+                }
             }
             newResultType = make_type<AppliedType>(ref, targs);
         }
