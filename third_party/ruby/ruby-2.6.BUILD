@@ -22,8 +22,8 @@ config_setting(
 
 # configuration variables ######################################################
 
-RUBY_VERSION = "2.4.3"
-RUBY_CORE_VERSION = "2.4.0"
+RUBY_VERSION = "2.6.3"
+RUBY_CORE_VERSION = "2.6.0"
 
 ARCH_LINUX = "x86_64-unknown-linux"
 ARCH_DARWIN = "x86_64-darwin18"
@@ -1202,7 +1202,7 @@ base_dir="\$$(dirname \$${BASH_SOURCE[0]})"
 
 # was this script invoked via 'bazel run"?
 if [ -d "\$$base_dir/ruby.runfiles" ]; then
-  base_dir="\$${base_dir}/ruby.runfiles/ruby_2_4_3"
+  base_dir="\$${base_dir}/ruby.runfiles/ruby_2_6_3"
 fi
 
 PREFIX="\$${base_dir}/""" + LIB_PREFIX + """"
@@ -1270,6 +1270,6 @@ sh_test(
 )
 
 test_suite(
-    name = "ruby-2.4",
+    name = "ruby-2.6",
     tests = [ ":smoke_test" ],
 )
