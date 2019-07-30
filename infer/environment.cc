@@ -826,18 +826,22 @@ core::TypePtr Environment::processBinding(core::Context ctx, cfg::Binding &bind,
                         // When the RHS is a type member, the type of this
                         // alias will always be a LambdaParam. Explicitly
                         // disable the fully-defined check in this case.
-                        // TODO: this means that cases where one type_member
-                        // refers to another in its bounds become OK, which is
-                        // not ideal. Maybe that check belongs in CFG
-                        // construction instead?
-                        //
-                        // Update this to check for being inside of
-                        // <static-init> on the class that is being defined
                         if (data->isTypeMember()) {
-                            checkFullyDefined = false;
-                        }
-
-                        if (data->isField()) {
+                            if (data->isFixed()) {
+                                // pick the upper bound arbitrarily here, as
+                                // isFixed() => lowerBound == upperBound.
+                                auto lambdaParam = core::cast_type<core::LambdaParam>(data->resultType.get());
+                                ENFORCE(lambdaParam != nullptr);
+                                tp.type = lambdaParam->upperBound;
+                            } else {
+                                // TODO: only disable checkFullyDefined if the
+                                // LambdaParam is valid in this context (static-init
+                                // or instance method for type_member, self method
+                                // for type_template)
+                                checkFullyDefined = false;
+                                tp.type = core::make_type<core::SelfTypeParam>(symbol);
+                            }
+                        } else if (data->isField()) {
                             tp.type = core::Types::resultTypeAsSeenFrom(
                                 ctx, symbol.data(ctx)->resultType, symbol.data(ctx)->owner,
                                 ctx.owner.data(ctx)->enclosingClass(ctx),
