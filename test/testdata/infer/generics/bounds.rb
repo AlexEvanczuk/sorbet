@@ -12,13 +12,16 @@ class A1
 
   # should fail: T2 mentions another type member
   T2 = type_member(lower: T1)
+                        # ^^ error: is not allowed
 
   # should fail: T3 mentions another type member
   T3 = type_member(lower: T2, upper: T1)
-     # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ error: `A1::T2` is not a subtype of `A1::T1`
+                        # ^^ error: is not allowed in this context
+                                   # ^^ error: is not allowed in this context
 
   # should fail: T4 mentions another type member (this message could be better)
   T4 = type_member(fixed: T1)
+                        # ^^ error: is not allowed in this context
 
   # should fail: the bounds are invalid
   T5 = type_member(lower: Animal, upper: Persian)
@@ -26,9 +29,11 @@ class A1
 
   # should fail: type member used as an argument to another type
   T6 = type_member(fixed: T::Array[T1])
+                                 # ^^ error: is not allowed in this context
 
   # should fail: type member used as an argument to another type
   T7 = type_member(lower: T::Array[T1])
+                                 # ^^ error: is not allowed in this context
 
   # should fail: both bounds and a fixed type are specified
   T8 = type_member(fixed: Cat, lower: Persian, upper: Animal)
@@ -39,19 +44,18 @@ class A1
 
   # should fail: still using a type member in the definition of another
   T10 = type_member(fixed: T9)
+                         # ^^ error: is not allowed in this context
 
   # should fail: using a type alias in bounds
   T11 = type_member(upper: T9)
+                         # ^^ error: is not allowed in this context
 
   # should fail: multiple upper and lower bounds specified
   T12 = type_member(lower: Integer, lower: String, upper: BasicObject, upper: TrueClass)
       # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ error: `String` is not a subtype of `TrueClass`
-                                  # ^^^^^ error: Duplicate use of `lower`
-                                                                     # ^^^^^ error: Duplicate use of `upper`
 
   # should fail: multiple fixed values provided
   T13 = type_member(fixed: Integer, fixed: String)
-                                  # ^^^^^ error: Duplicate use of `fixed`
 end
 
 module M
