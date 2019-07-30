@@ -1099,7 +1099,6 @@ public:
         auto it = args.args.begin();
         int i = -1;
         targs.reserve(attachedClass.data(ctx)->typeMembers().size());
-        bool validBounds = true;
         for (auto mem : attachedClass.data(ctx)->typeMembers()) {
             ++i;
 
@@ -1115,6 +1114,7 @@ public:
             } else if (it != args.args.end()) {
                 auto loc = args.locs.args[it - args.args.begin()];
                 auto argType = unwrapType(ctx, loc, (*it)->type);
+                bool validBounds = true;
 
                 // Validate type parameter bounds.
                 if (!Types::isSubType(ctx, argType, memType->upperBound)) {
@@ -1136,7 +1136,12 @@ public:
                     }
                 }
 
-                targs.emplace_back(argType);
+                if (validBounds) {
+                    targs.emplace_back(argType);
+                } else {
+                    targs.emplace_back(Types::untypedUntracked());
+                }
+
                 ++it;
             } else if (attachedClass == Symbols::Hash() && i == 2) {
                 auto tupleArgs = targs;
@@ -1146,11 +1151,7 @@ public:
             }
         }
 
-        if (validBounds) {
-            res.returnType = make_type<MetaType>(make_type<AppliedType>(attachedClass, move(targs)));
-        } else {
-            res.returnType = Types::untypedUntracked();
-        }
+        res.returnType = make_type<MetaType>(make_type<AppliedType>(attachedClass, move(targs)));
     }
 } T_Generic_squareBrackets;
 
