@@ -753,7 +753,6 @@ public:
             ctx.state.mangleRenameSymbol(oldSym, oldSym.data(ctx)->name);
         }
         auto sym = ctx.state.enterTypeMember(asgn->loc, onSymbol, typeName->cnst, variance);
-        auto symData = sym.data(ctx);
 
         // Ensure that every type member has a LambdaParam with bounds, but give
         // both bounds as T.untyped. The reason for this is that the bounds will
@@ -761,7 +760,7 @@ public:
         // in test/testdata/todo/fixed_ordering.rb) `T.untyped` will be used for
         // the value of the type, instead of `<any>`
         auto untyped = core::Types::untyped(ctx, sym);
-        symData->resultType = core::make_type<core::LambdaParam>(sym, untyped, untyped);
+        sym.data(ctx)->resultType = core::make_type<core::LambdaParam>(sym, untyped, untyped);
 
         if (isTypeTemplate) {
             auto context = ctx.owner.data(ctx)->enclosingClass(ctx);
@@ -801,8 +800,8 @@ public:
                     }
                 }
 
-                const bool fixed = symData->isFixed();
-                const bool bounded = symData->isBounded();
+                const bool fixed = sym.data(ctx)->isFixed();
+                const bool bounded = sym.data(ctx)->isBounded();
 
                 // one of fixed or bounds were provided
                 if (fixed != bounded) {
