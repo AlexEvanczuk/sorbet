@@ -103,6 +103,7 @@ Usage:
                                 but not `/foo.rb` or `/foo2/bar.rb`.
       --no-error-count          Do not print the error count summary line
       --autogen-version arg     Autogen version to output
+      --stripe-mode             Enable Stripe specific error enforcement
       --autogen-autoloader-exclude-require arg
                                 Names that should be excluded from top-level
                                 require statements in autoloader output. (e.g.
