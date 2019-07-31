@@ -1375,6 +1375,12 @@ public:
             auto *memberType = core::cast_type<core::LambdaParam>(data->resultType.get());
             ENFORCE(memberType != nullptr);
 
+            // NOTE: the resultType is set back in the namer to be a LambdaParam
+            // with `T.untyped` for its bounds. We fix that here by setting the
+            // bounds to top and bottom.
+            memberType->lowerBound = core::Types::bottom();
+            memberType->upperBound = core::Types::top();
+
             auto *hash = ast::cast_tree<ast::Hash>(send->args[arg].get());
             if (hash) {
                 int i = -1;
