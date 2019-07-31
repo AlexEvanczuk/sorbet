@@ -1376,15 +1376,33 @@ public:
             auto *memberType = core::cast_type<core::LambdaParam>(data->resultType.get());
             ENFORCE(memberType != nullptr);
 
+            auto lowerBound = core::Types::bottom();
+            auto upperBound = core::Types::bottom();
+
             // NOTE: the resultType is set back in the namer to be a LambdaParam
             // with `T.untyped` for its bounds. We fix that here by setting the
             // bounds to top and bottom.
             memberType->lowerBound = core::Types::bottom();
             memberType->upperBound = core::Types::top();
 
+            core::LambdaParam *parentType = nullptr;
+            auto parentMember = data->owner.data(ctx)->superClass().data(ctx)->findMember(ctx, data->name);
+            if (parentMember.exists()) {
+                parentType = core::cast_type<core::LambdaParam>(parentMember.data(ctx)->resultType.get());
+                ENFORCE(parentType != nullptr);
+            }
+
+            // Initialize the upper/lower bounds according to definition in the
+            // super class.
+            if (parentType != nullptr) {
+                memberType->lowerBound = parentType->lowerBound;
+                memberType->upperBound = parentType->upperBound;
+            }
+
             auto *hash = ast::cast_tree<ast::Hash>(send->args[arg].get());
             if (hash) {
                 int i = -1;
+                bool boundsChanged = false;
                 for (auto &keyExpr : hash->keys) {
                     i++;
                     auto lit = ast::cast_tree<ast::Literal>(keyExpr.get());
@@ -1399,23 +1417,47 @@ public:
 
                         switch (lit->asSymbol(ctx)._id) {
                             case core::Names::fixed()._id:
+                                boundsChanged = true;
                                 memberType->lowerBound = resTy;
                                 memberType->upperBound = resTy;
                                 break;
 
                             case core::Names::lower()._id:
+                                boundsChanged = true;
                                 memberType->lowerBound = resTy;
                                 break;
 
                             case core::Names::upper()._id:
+                                boundsChanged = true;
                                 memberType->upperBound = resTy;
                                 break;
                         }
                     }
                 }
 
-                // validate the bounds
-                if (!core::Types::isSubType(ctx, memberType->lowerBound, memberType->upperBound)) {
+                // If the parent bounds exist and new bounds were set, validate
+                // the new bounds against those of the parent.
+                // NOTE: these errors could be better for cases involving
+                // `fixed`.
+                if (boundsChanged && parentType != nullptr) {
+                    if (!core::Types::isSubType(ctx, parentType->lowerBound, memberType->lowerBound)) {
+                        if (auto e = ctx.state.beginError(send->loc, core::errors::Resolver::ParentTypeBoundsMismatch)) {
+                            e.setHeader("parent lower bound `{}` is not a subtype of lower bound `{}`", parentType->lowerBound->show(ctx),
+                                    memberType->lowerBound->show(ctx));
+                        }
+                    }
+                    if (!core::Types::isSubType(ctx, memberType->upperBound, parentType->upperBound)) {
+                        if (auto e = ctx.state.beginError(send->loc, core::errors::Resolver::ParentTypeBoundsMismatch)) {
+                            e.setHeader("upper bound `{}` is not a subtype of parent upper bound `{}`", memberType->upperBound->show(ctx),
+                                    parentType->upperBound->show(ctx));
+                        }
+                    }
+                }
+
+                // Ensure that the new lower bound is a subtype of the upper
+                // bound. This will be a no-op in the case that the type member
+                // is fixed.
+                if (boundsChanged && !core::Types::isSubType(ctx, memberType->lowerBound, memberType->upperBound)) {
                     if (auto e = ctx.state.beginError(send->loc, core::errors::Resolver::InvalidTypeMemberBounds)) {
                         e.setHeader("`{}` is not a subtype of `{}`", memberType->lowerBound->show(ctx),
                                     memberType->upperBound->show(ctx));

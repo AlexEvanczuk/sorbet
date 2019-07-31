@@ -54,7 +54,8 @@ constexpr ErrorClass GenericClassWithoutTypeArgsStdlib{5046, StrictLevel::Strict
 constexpr ErrorClass FinalAncestor{5047, StrictLevel::False};
 constexpr ErrorClass FinalModuleNonFinalMethod{5048, StrictLevel::False};
 constexpr ErrorClass BadParameterOrdering{5049, StrictLevel::False};
-constexpr ErrorClass InvalidTypeMemberBounds{5050, StrictLevel::True};
+constexpr ErrorClass InvalidTypeMemberBounds{5050, StrictLevel::False};
+constexpr ErrorClass ParentTypeBoundsMismatch{5051, StrictLevel::False};
 } // namespace sorbet::core::errors::Resolver
 
 #endif
