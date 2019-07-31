@@ -676,19 +676,6 @@ public:
         return asgn;
     }
 
-    // Utility function that checks for duplicate named arguments.
-    void checkDuplicateNamedArg(const core::Context ctx, std::optional<core::Loc> &prevLoc, const core::Loc &loc,
-                                string_view variety) {
-        if (prevLoc.has_value()) {
-            if (auto e = ctx.state.beginError(loc, core::errors::Namer::InvalidTypeDefinition)) {
-                e.setHeader("Duplicate use of `{}`", variety);
-                e.addErrorLine(*prevLoc, "First occurrence of `{}`", variety);
-            }
-        } else {
-            prevLoc = make_optional<core::Loc>(loc);
-        }
-    }
-
     unique_ptr<ast::Expression> handleTypeMemberDefinition(core::MutableContext ctx, const ast::Send *send,
                                                            unique_ptr<ast::Assign> asgn,
                                                            const ast::UnresolvedConstantLit *typeName) {
