@@ -823,22 +823,14 @@ core::TypePtr Environment::processBinding(core::Context ctx, cfg::Binding &bind,
                     tp.origins.emplace_back(symbol.data(ctx)->loc());
                 } else if (data->isField() || (data->isStaticField() && !data->isTypeAlias()) || data->isTypeMember()) {
                     if (data->resultType.get() != nullptr) {
-                        // When the RHS is a type member, the type of this
-                        // alias will always be a LambdaParam. Explicitly
-                        // disable the fully-defined check in this case.
                         if (data->isTypeMember()) {
                             if (data->isFixed()) {
-                                // pick the upper bound arbitrarily here, as
+                                // pick the upper bound here, as
                                 // isFixed() => lowerBound == upperBound.
                                 auto lambdaParam = core::cast_type<core::LambdaParam>(data->resultType.get());
                                 ENFORCE(lambdaParam != nullptr);
                                 tp.type = lambdaParam->upperBound;
                             } else {
-                                // TODO: only disable checkFullyDefined if the
-                                // LambdaParam is valid in this context (static-init
-                                // or instance method for type_member, self method
-                                // for type_template)
-                                checkFullyDefined = false;
                                 tp.type = core::make_type<core::SelfTypeParam>(symbol);
                             }
                         } else if (data->isField()) {
