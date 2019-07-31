@@ -621,12 +621,15 @@ TypeSyntax::ResultType TypeSyntax::getResultTypeAndBind(core::MutableContext ctx
                     // 2. if it's a type_template type, be used in a singleton
                     //    method
                     // 3. if it's a type_member type, be used in an instance method
-                    if (usedOnSourceClass && ((isTypeTemplate && ctxIsSingleton) || !(isTypeTemplate || ctxIsSingleton))) {
+                    if (usedOnSourceClass &&
+                        ((isTypeTemplate && ctxIsSingleton) || !(isTypeTemplate || ctxIsSingleton))) {
                         auto *lambdaParam = core::cast_type<core::LambdaParam>(symData->resultType.get());
                         ENFORCE(lambdaParam != nullptr);
-                        result.type = core::make_type<core::LambdaParam>(sym, lambdaParam->lowerBound, lambdaParam->upperBound);
+                        result.type =
+                            core::make_type<core::LambdaParam>(sym, lambdaParam->lowerBound, lambdaParam->upperBound);
                     } else {
-                        if (auto e = ctx.state.beginError(i->loc, core::errors::Resolver::InvalidTypeDeclarationTyped)) {
+                        if (auto e =
+                                ctx.state.beginError(i->loc, core::errors::Resolver::InvalidTypeDeclarationTyped)) {
                             string typeSource = isTypeTemplate ? "type_template" : "type_member";
                             string typeStr = sym.show(ctx);
 

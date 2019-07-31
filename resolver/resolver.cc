@@ -1023,8 +1023,9 @@ private:
                 auto allowSelfType = true;
                 auto allowRebind = false;
                 auto allowTypeMember = true;
-                TypeSyntax::parseSig(ctx, sig, nullptr,
-                                     TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, core::Symbols::untyped()});
+                TypeSyntax::parseSig(
+                    ctx, sig, nullptr,
+                    TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, core::Symbols::untyped()});
             }
 
             if (auto e = ctx.state.beginError(lastSigs[0]->loc, core::errors::Resolver::InvalidMethodSignature)) {
@@ -1148,9 +1149,9 @@ private:
                         auto allowSelfType = true;
                         auto allowRebind = false;
                         auto allowTypeMember = true;
-                        auto sig =
-                            TypeSyntax::parseSig(ctx.withOwner(sigOwner), ast::cast_tree<ast::Send>(lastSigs[i]),
-                                                 nullptr, TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, mdef->symbol});
+                        auto sig = TypeSyntax::parseSig(
+                            ctx.withOwner(sigOwner), ast::cast_tree<ast::Send>(lastSigs[i]), nullptr,
+                            TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, mdef->symbol});
                         core::SymbolRef overloadSym;
                         if (isOverloaded) {
                             vector<int> argsToKeep;
@@ -1392,8 +1393,9 @@ public:
                         auto allowSelfType = true;
                         auto allowRebind = false;
                         auto allowTypeMember = false;
-                        core::TypePtr resTy = TypeSyntax::getResultType(ctx, *(hash->values[i]), emptySig,
-                                                                     TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, sym});
+                        core::TypePtr resTy =
+                            TypeSyntax::getResultType(ctx, *(hash->values[i]), emptySig,
+                                                      TypeSyntaxArgs{allowSelfType, allowRebind, allowTypeMember, sym});
 
                         switch (lit->asSymbol(ctx)._id) {
                             case core::Names::fixed()._id:
@@ -1415,7 +1417,8 @@ public:
                 // validate the bounds
                 if (!core::Types::isSubType(ctx, memberType->lowerBound, memberType->upperBound)) {
                     if (auto e = ctx.state.beginError(send->loc, core::errors::Resolver::InvalidTypeMemberBounds)) {
-                        e.setHeader("`{}` is not a subtype of `{}`", memberType->lowerBound->show(ctx), memberType->upperBound->show(ctx));
+                        e.setHeader("`{}` is not a subtype of `{}`", memberType->lowerBound->show(ctx),
+                                    memberType->upperBound->show(ctx));
                     }
                 }
             }
